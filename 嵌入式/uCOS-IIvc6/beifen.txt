@@ -1,0 +1,74 @@
+#include <includes.h>
+
+#define TASK_STK_SIZE    128
+#define TASK_PRIO_GAME   5
+#define TASK_PRIO_INPUT  6
+
+OS_STK TaskStk_Game[TASK_STK_SIZE];
+OS_STK TaskStk_Input[TASK_STK_SIZE];
+
+INT8U secret_number;
+
+static void Task_Game(void *p_arg);
+static void Task_Input(void *p_arg);
+
+void main(void) {
+    OSInit();
+    
+    OSTaskCreateExt(Task_Game,
+                    (void *)0,
+                    (OS_STK *)&TaskStk_Game[TASK_STK_SIZE - 1],
+                    TASK_PRIO_GAME,
+                    TASK_PRIO_GAME,
+                    (OS_STK *)&TaskStk_Game[0],
+                    TASK_STK_SIZE,
+                    (void *)0,
+                    OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR);
+    
+    OSTaskCreateExt(Task_Input,
+                    (void *)0,
+                    (OS_STK *)&TaskStk_Input[TASK_STK_SIZE - 1],
+                    TASK_PRIO_INPUT,
+                    TASK_PRIO_INPUT,
+                    (OS_STK *)&TaskStk_Input[0],
+                    TASK_STK_SIZE,
+                    (void *)0,
+                    OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR);
+    
+    OSStart();
+}
+
+static void Task_Game(void *p_arg) {
+    p_arg = p_arg;
+    
+    srand((unsigned int)OSTimeGet()); // Seed the random number generator with current time
+    
+    secret_number = rand() % 100 + 1; // Generate a random number between 1 and 100
+    
+    while (1) {
+        // Game logic
+        // You can add more sophisticated game logic here
+        
+        OSTimeDlyHMSM(0, 0, 5, 0); // Delay for 5 seconds
+    }
+}
+
+static void Task_Input(void *p_arg) {
+    INT8U guess;
+    
+    p_arg = p_arg;
+    
+    while (1) {
+        printf("Enter your guess (1-100): ");
+        scanf("%hhu", &guess);
+        
+        if (guess == secret_number) {
+            printf("Congratulations! You guessed the correct number.\n");
+            break; // End the game
+        } else if (guess < secret_number) {
+            printf("Incorrect guess. The secret number is greater than your guess.\n");
+        } else {
+            printf("Incorrect guess. The secret number is less than your guess.\n");
+        }
+    }
+}
